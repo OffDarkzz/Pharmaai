@@ -18,7 +18,25 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.units import cm
+import streamlit as st
+import pandas as pd
 
+# --- COLOQUE ISSO LOGO NO COMEÇO DO CÓDIGO ---
+st.set_page_config(page_title="PharmAI", layout="wide")
+
+# Crie uma função para carregar os dados e coloque o @st.cache_data nela
+@st.cache_data
+def carregar_dados():
+    # Aqui vai o seu código que lê o CSV
+    df = pd.read_csv('cid10.csv') # ou o nome do seu arquivo
+    return df
+
+# Agora chame a função. O Streamlit vai carregar UMA VEZ e guardar na memória.
+df = carregar_dados()
+
+# Depois disso, você pode escrever na tela
+st.title("Sistema PharmAI")
+st.write(f"Carregados {len(df)} registros da CID-10")
 # ============================================
 # INICIALIZAÇÃO DO APP
 # ============================================
