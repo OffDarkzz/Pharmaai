@@ -7,3 +7,6 @@ requests>=2.31
 python-dotenv>=1.0
 gunicorn>=21.2
 psycopg2-binary>=2.9
+pandas
+streamlit
+google-generativeai
