@@ -18,23 +18,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.units import cm
-import streamlit as st
-import pandas as pd
-# (coloque aqui os outros imports que você tem, ex: google.generativeai)
 
-# CORREÇÃO DA TELA PRETA
-@st.cache_data
-def carregar_csv():
-    # Coloque o nome EXATO do seu arquivo abaixo. Se for "cid10.csv", deixe assim.
-    return pd.read_csv('cid10.csv')
-
-# Carrega os dados de uma vez
-df = carregar_csv()
-
-# Agora sim, o resto do seu código continua abaixo:
-st.title("Meu App PharmAI")
-st.write(f"Registros carregados: {len(df)}")
-# ... resto do código ...
 # ============================================
 # INICIALIZAÇÃO DO APP
 # ============================================
