@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Análise Preditiva - PharmaAI{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .risco-card {
+        background: var(--bg-card);
+        border-radius: var(--radius);
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 15px;
+    }
+    .risco-card .cabecalho {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .risco-card .paciente-nome {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .risco-card .risco-badge {
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .risco-badge.alto { background: #dc3545; color: white; }
+    .risco-badge.moderado { background: #fd7e14; color: white; }
+    .risco-badge.baixo { background: #28a745; color: white; }
+    .risco-badge.indeterminado { background: #6c757d; color: white; }
+    
+    .risco-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin: 15px 0;
+    }
+    .risco-item {
+        background: var(--bg-secondary);
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .risco-item .valor {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+    .risco-item .label {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+    .risco-item .barra {
+        height: 6px;
+        background: var(--border-color);
+        border-radius: 3px;
+        margin-top: 8px;
+        overflow: hidden;
+    }
+    .risco-item .barra .preenchimento {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 1s ease;
+    }
+    .barra-verde { background: #28a745; }
+    .barra-amarelo { background: #fd7e14; }
+    .barra-vermelho { background: #dc3545; }
+    
+    .fatores-lista {
+        margin: 10px 0;
+        padding-left: 20px;
+        color: var(--text-muted);
+    }
+    .fatores-lista li { margin: 3px 0; }
+    
+    .recomendacoes-box {
+        background: var(--bg-secondary);
+        padding: 15px 20px;
+        border-radius: 8px;
+        border-left: 4px solid #2e86c1;
+        margin-top: 10px;
+    }
+    .recomendacoes-box li { margin: 5px 0; color: var(--text-secondary); }
+    
+    .stats-grid-preditiva {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    .stats-grid-preditiva .stat-card {
+        background: var(--bg-card);
+        padding: 15px;
+        border-radius: var(--radius);
+        text-align: center;
+        border: 1px solid var(--border-color);
+    }
+    .stats-grid-preditiva .stat-card .num {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+    .stats-grid-preditiva .stat-card .label {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+    
+    .btn-detalhes {
+        padding: 5px 12px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        background: #2e86c1;
+        color: white;
+        font-size: 13px;
+        transition: all 0.3s;
+    }
+    .btn-detalhes:hover { opacity: 0.8; transform: scale(1.05); }
+    
+    .detalhes-paciente {
+        display: none;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-color);
+    }
+    .detalhes-paciente.ativo { display: block; }
+    
+    @media (max-width: 600px) {
+        .risco-grid { grid-template-columns: 1fr 1fr; }
+        .stats-grid-preditiva { grid-template-columns: 1fr 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block header_actions %}
+<a href="/" class="btn btn-voltar">← Voltar</a>
+<a href="/analise_tendencias" class="btn btn-primary">📈 Tendências</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>🔮 Análise Preditiva</h2>
+    <p style="color: var(--text-muted);">
+        Previsão de riscos baseada em dados clínicos e histórico do paciente.
+    </p>
+</div>
+
+<!-- RESULTADOS AGREGADOS -->
+<div class="stats-grid-preditiva">
+    <div class="stat-card">
+        <div class="num">{{ dados.total_pacientes }}</div>
+        <div class="label">👤 Pacientes analisados</div>
+    </div>
+    <div class="stat-card">
+        <div class="num" style="color: #dc3545;">{{ dados.alto_risco }}</div>
+        <div class="label">🚨 Alto risco</div>
+    </div>
+    <div class="stat-card">
+        <div class="num" style="color: #fd7e14;">{{ dados.moderado_risco }}</div>
+        <div class="label">⚠️ Moderado risco</div>
+    </div>
+    <div class="stat-card">
+        <div class="num" style="color: #28a745;">{{ dados.baixo_risco }}</div>
+        <div class="label">✅ Baixo risco</div>
+    </div>
+</div>
+
+<!-- PACIENTES PRIORITÁRIOS -->
+<div class="card">
+    <h3 style="color: var(--text-primary); margin-bottom: 15px;">🚨 Pacientes com Maior Risco</h3>
+    {% if dados.pacientes_prioritarios %}
+        {% for item in dados.pacientes_prioritarios %}
+        <div class="risco-card">
+            <div class="cabecalho">
+                <span class="paciente-nome">{{ item.paciente.nome }}</span>
+                <span class="risco-badge {{ item.nivel_geral|lower }}">
+                    {% if item.nivel_geral == 'Alto' %}🚨 Alto
+                    {% elif item.nivel_geral == 'Moderado' %}⚠️ Moderado
+                    {% elif item.nivel_geral == 'Baixo' %}✅ Baixo
+                    {% else %}❓ Indeterminado{% endif %}
+                </span>
+            </div>
+            
+            <div class="risco-grid">
+                <div class="risco-item">
+                    <div class="valor">{{ item.analise.diabetes.risco }}%</div>
+                    <div class="label">🩸 Diabetes</div>
+                    <div class="barra">
+                        <div class="preenchimento {% if item.analise.diabetes.risco > 60 %}barra-vermelho{% elif item.analise.diabetes.risco > 30 %}barra-amarelo{% else %}barra-verde{% endif %}" 
+                             style="width: {{ item.analise.diabetes.risco }}%;"></div>
+                    </div>
+                </div>
+                <div class="risco-item">
+                    <div class="valor">{{ item.analise.hipertensao.risco }}%</div>
+                    <div class="label">❤️ Hipertensão</div>
+                    <div class="barra">
+                        <div class="preenchimento {% if item.analise.hipertensao.risco > 60 %}barra-vermelho{% elif item.analise.hipertensao.risco > 30 %}barra-amarelo{% else %}barra-verde{% endif %}" 
+                             style="width: {{ item.analise.hipertensao.risco }}%;"></div>
+                    </div>
+                </div>
+                <div class="risco-item">
+                    <div class="valor">{{ item.analise.cardiovascular.risco }}%</div>
+                    <div class="label">💓 Cardiovascular</div>
+                    <div class="barra">
+                        <div class="preenchimento {% if item.analise.cardiovascular.risco > 60 %}barra-vermelho{% elif item.analise.cardiovascular.risco > 30 %}barra-amarelo{% else %}barra-verde{% endif %}" 
+                             style="width: {{ item.analise.cardiovascular.risco }}%;"></div>
+                    </div>
+                </div>
+                <div class="risco-item">
+                    <div class="valor">{{ item.analise.abandono.risco }}%</div>
+                    <div class="label">📋 Abandono</div>
+                    <div class="barra">
+                        <div class="preenchimento {% if item.analise.abandono.risco > 60 %}barra-vermelho{% elif item.analise.abandono.risco > 30 %}barra-amarelo{% else %}barra-verde{% endif %}" 
+                             style="width: {{ item.analise.abandono.risco }}%;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn-detalhes" onclick="toggleDetalhes({{ loop.index0 }})">
+                📋 Ver detalhes e recomendações
+            </button>
+            
+            <div class="detalhes-paciente" id="detalhes-{{ loop.index0 }}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+                    <div>
+                        <strong style="color: var(--text-primary);">📊 Fatores de Risco</strong>
+                        <ul class="fatores-lista">
+                            {% for f in item.analise.diabetes.fatores %}
+                                <li>🩸 Diabetes: {{ f }}</li>
+                            {% endfor %}
+                            {% for f in item.analise.hipertensao.fatores %}
+                                <li>❤️ Hipertensão: {{ f }}</li>
+                            {% endfor %}
+                            {% for f in item.analise.cardiovascular.fatores %}
+                                <li>💓 Cardiovascular: {{ f }}</li>
+                            {% endfor %}
+                            {% for f in item.analise.abandono.fatores %}
+                                <li>📋 Abandono: {{ f }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div>
+                        <strong style="color: var(--text-primary);">💡 Recomendações</strong>
+                        <ul class="recomendacoes-box" style="border-left-color: #28a745; background: transparent;">
+                            {% for rec in item.analise.diabetes.recomendacoes or [] %}
+                                <li>🩸 {{ rec }}</li>
+                            {% endfor %}
+                            {% for rec in item.analise.hipertensao.recomendacoes or [] %}
+                                <li>❤️ {{ rec }}</li>
+                            {% endfor %}
+                            {% for rec in item.analise.cardiovascular.recomendacoes or [] %}
+                                <li>💓 {{ rec }}</li>
+                            {% endfor %}
+                            {% for rec in item.analise.abandono.recomendacoes or [] %}
+                                <li>📋 {{ rec }}</li>
+                            {% endfor %}
+                            {% if not item.analise.diabetes.fatores and not item.analise.hipertensao.fatores %}
+                                <li>✅ Nenhuma recomendação específica no momento.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color: var(--text-muted); text-align: center; padding: 30px;">
+            Nenhum paciente cadastrado para análise.
+        </p>
+    {% endif %}
+</div>
+
+<!-- BOTÃO PARA ANÁLISE INDIVIDUAL -->
+<div style="text-align: center; margin-top: 20px;">
+    <p style="color: var(--text-muted); margin-bottom: 10px;">
+        🔍 Para ver a análise de um paciente específico, acesse o prontuário.
+    </p>
+    <a href="/" class="btn btn-primary">← Voltar ao início</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleDetalhes(index) {
+        var detalhes = document.getElementById('detalhes-' + index);
+        detalhes.classList.toggle('ativo');
+        
+        var btn = detalhes.previousElementSibling;
+        if (detalhes.classList.contains('ativo')) {
+            btn.textContent = '📋 Ocultar detalhes';
+        } else {
+            btn.textContent = '📋 Ver detalhes e recomendações';
+        }
+    }
+</script>
+{% endblock %}

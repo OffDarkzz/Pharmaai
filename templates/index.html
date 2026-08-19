@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}PharmaAI - Início{% endblock %}
+
+{% block content %}
+<!-- RESUMO RÁPIDO -->
+<div class="resumo-cards">
+    <div class="resumo-card">
+        <div class="numero">{{ total_pacientes }}</div>
+        <div class="label">👤 Pacientes</div>
+    </div>
+    <div class="resumo-card">
+        <div class="numero">{{ total_consultas }}</div>
+        <div class="label">📋 Consultas</div>
+    </div>
+    <div class="resumo-card" style="border-left-color: #f39c12;">
+        <div class="numero" style="color: #f39c12;">{{ consultas_pendentes }}</div>
+        <div class="label">⏳ Pendentes</div>
+    </div>
+    <div class="resumo-card" style="border-left-color: #28b463;">
+        <div class="numero" style="color: #28b463;">{{ consultas_aprovadas }}</div>
+        <div class="label">✅ Aprovadas</div>
+    </div>
+</div>
+
+<!-- LISTA DE PACIENTES -->
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">
+            📋 Pacientes Cadastrados
+            <span class="badge">{{ pacientes|length }}</span>
+        </span>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="/anamnese" class="btn btn-success btn-sm">
+                <i class="fas fa-plus-circle"></i> Novo Paciente
+            </a>
+            <a href="/analise_tendencias" class="btn btn-primary btn-sm">
+                <i class="fas fa-chart-line"></i> Tendências
+            </a>
+            <a href="/analise_preditiva" class="btn btn-purple btn-sm">
+                <i class="fas fa-brain"></i> Preditiva
+            </a>
+        </div>
+    </div>
+
+    <div class="busca-rapida" style="margin-bottom: 16px;">
+        <input type="text" id="buscaPaciente" placeholder="🔍 Buscar paciente por nome..." onkeyup="filtrarTabela()" class="form-control" style="max-width: 400px;">
+    </div>
+
+    {% if pacientes %}
+    <div class="table-container">
+        <table id="tabelaPacientes">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Idade</th>
+                    <th>Doenças</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pacientes %}
+                <tr>
+                    <td><strong>#{{ p.id }}</strong></td>
+                    <td><strong>{{ p.nome }}</strong></td>
+                    <td>{{ p.idade }} anos</td>
+                    <td>{{ p.doencas or 'Nenhuma' }}</td>
+                    <td>
+                        {% set consulta = p.consultas|last %}
+                        {% if consulta %}
+                            {% if consulta.status == 'Pendente' %}
+                                <span class="badge badge-pendente">⏳ Pendente</span>
+                            {% elif consulta.status == 'Analisado' %}
+                                <span class="badge badge-analisado">📝 Analisado</span>
+                            {% elif consulta.status == 'Aprovado' %}
+                                <span class="badge badge-aprovado">✅ Aprovado</span>
+                            {% endif %}
+                        {% else %}
+                            <span style="color: var(--text-muted);">Sem consulta</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-acoes" style="display: flex; gap: 5px; flex-wrap: wrap;">
+                            <a href="/resultado/{{ p.id }}" class="btn btn-primary btn-sm" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-eye"></i> Ver
+                            </a>
+                            <a href="/prontuario/{{ p.id }}" class="btn btn-purple btn-sm" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-folder-open"></i> Prontuário
+                            </a>
+                            <a href="/imc_evolucao/{{ p.id }}" class="btn btn-orange btn-sm" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-chart-line"></i> IMC
+                            </a>
+                            <a href="/historico/{{ p.id }}" class="btn btn-success btn-sm" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-history"></i> Histórico
+                            </a>
+                            <a href="/editar/{{ p.id }}" class="btn btn-warning btn-sm" style="padding: 5px 10px; font-size: 12px;">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="vazio" style="text-align: center; color: var(--text-muted); padding: 40px;">
+        <span style="font-size: 48px; display: block; margin-bottom: 10px;">📭</span>
+        Nenhum paciente cadastrado ainda.<br>
+        <span style="font-size: 14px;">Clique em "Novo Paciente" para começar!</span>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function filtrarTabela() {
+        var input = document.getElementById("buscaPaciente");
+        var filter = input.value.toUpperCase();
+        var table = document.getElementById("tabelaPacientes");
+        var rows = table.getElementsByTagName("tr");
+        for (var i = 1; i < rows.length; i++) {
+            var nomeColuna = rows[i].getElementsByTagName("td")[1];
+            if (nomeColuna) {
+                var texto = nomeColuna.textContent || nomeColuna.innerText;
+                rows[i].style.display = texto.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+            }
+        }
+    }
+</script>
+{% endblock %}

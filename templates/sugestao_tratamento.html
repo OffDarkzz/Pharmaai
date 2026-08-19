@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Sugestão de Tratamento - {{ paciente.nome }}{% endblock %}
+
+{% block head %}
+<style>
+    .sugestao-card {
+        background: var(--bg-secondary);
+        padding: 15px 20px;
+        border-radius: 8px;
+        border-left: 4px solid #2e86c1;
+        margin-bottom: 10px;
+    }
+    .sugestao-card .med-nome {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .sugestao-card .med-freq {
+        font-size: 14px;
+        color: var(--text-muted);
+    }
+    .sugestao-card .med-posologia {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-top: 5px;
+    }
+    .sugestao-card .med-stats {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+    .sugestao-card .med-stats span {
+        font-size: 13px;
+        color: var(--text-muted);
+        background: var(--bg-card);
+        padding: 2px 10px;
+        border-radius: 12px;
+    }
+    .badge-aprovacao {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .badge-aprovacao.alta { background: #28a745; color: white; }
+    .badge-aprovacao.media { background: #ffc107; color: #212529; }
+    .badge-aprovacao.baixa { background: #dc3545; color: white; }
+    
+    .similares-box {
+        background: var(--bg-secondary);
+        padding: 15px 20px;
+        border-radius: 8px;
+        border-left: 4px solid #805ad5;
+        margin: 15px 0;
+    }
+    .similares-box .num {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+</style>
+{% endblock %}
+
+{% block header_actions %}
+<a href="/resultado/{{ paciente.id }}" class="btn btn-primary btn-sm">← Voltar</a>
+<a href="/prontuario/{{ paciente.id }}" class="btn btn-purple btn-sm">📋 Prontuário</a>
+<a href="/" class="btn btn-voltar btn-sm">← Início</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>🧠 Sugestão de Tratamento</h2>
+    <p style="color: var(--text-muted);">
+        Baseado em dados reais de pacientes com perfil semelhante a <strong>{{ paciente.nome }}</strong>
+    </p>
+</div>
+
+{% if relatorio.tem_dados %}
+<div class="similares-box">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div>
+            <span class="num">{{ relatorio.pacientes_similares }}</span>
+            <span style="color: var(--text-muted);">pacientes com perfil semelhante</span>
+        </div>
+        <div>
+            <span style="color: var(--text-muted);">Melhor similaridade:</span>
+            <strong style="color: var(--text-primary);">{{ relatorio.melhor_score }}%</strong>
+        </div>
+    </div>
+</div>
+
+<!-- Medicamentos em uso -->
+{% if relatorio.medicamentos_atuais %}
+<div class="card" style="border: 2px solid #ffc107;">
+    <h4 style="color: var(--text-primary);">💊 Medicamentos que o paciente já usa</h4>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+        {% for med in relatorio.medicamentos_atuais %}
+            <span style="background: #fff3cd; padding: 5px 15px; border-radius: 20px; font-weight: 600;">{{ med }}</span>
+        {% endfor %}
+    </div>
+    <p style="color: var(--text-muted); font-size: 13px; margin-top: 8px;">✅ Esses medicamentos já estão sendo usados e não serão sugeridos novamente.</p>
+</div>
+{% endif %}
+
+<!-- Sugestões -->
+<div class="card">
+    <h3 style="color: var(--text-primary); margin-bottom: 15px;">📋 Sugestões para {{ paciente.nome }}</h3>
+    
+    {% if relatorio.sugestoes %}
+        {% for s in relatorio.sugestoes %}
+        <div class="sugestao-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <span class="med-nome">{{ s.medicamento }}</span>
+                <span class="med-freq">💊 {{ s.frequencia }} prescrições</span>
+            </div>
+            
+            {% if s.posologia_comum %}
+            <div class="med-posologia">
+                <strong>💊 Posologia comum:</strong> {{ s.posologia_comum }}
+            </div>
+            {% endif %}
+            
+            <div class="med-stats">
+                <span>👤 {{ s.pacientes }} pacientes</span>
+                <span>📋 {{ s.consultas }} consultas</span>
+                <span>
+                    Taxa de aprovação:
+                    {% if s.taxa_aprovacao >= 70 %}
+                        <span class="badge-aprovacao alta">✅ {{ s.taxa_aprovacao }}%</span>
+                    {% elif s.taxa_aprovacao >= 40 %}
+                        <span class="badge-aprovacao media">🟡 {{ s.taxa_aprovacao }}%</span>
+                    {% else %}
+                        <span class="badge-aprovacao baixa">🔴 {{ s.taxa_aprovacao }}%</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color: var(--text-muted); text-align: center; padding: 30px;">
+            <span style="font-size: 48px; display: block;">💡</span>
+            Nenhuma sugestão disponível.<br>
+            <span style="font-size: 14px;">Os medicamentos que {{ paciente.nome }} já usa foram filtrados.</span>
+        </p>
+    {% endif %}
+</div>
+
+<div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+    <a href="/resultado/{{ paciente.id }}" class="btn btn-primary">← Voltar ao resultado</a>
+    <a href="/prontuario/{{ paciente.id }}" class="btn btn-purple">📋 Ver Prontuário</a>
+    <a href="/" class="btn btn-voltar">← Início</a>
+</div>
+
+{% else %}
+<div class="card">
+    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+        <span style="font-size: 48px; display: block;">📭</span>
+        <h3 style="color: var(--text-primary);">Sem dados suficientes</h3>
+        <p>{{ relatorio.mensagem }}</p>
+        <p style="font-size: 14px; margin-top: 10px;">Cadastre mais pacientes e consultas para gerar sugestões baseadas em dados reais.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

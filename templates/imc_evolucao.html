@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Evolução do IMC - {{ paciente.nome }}{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .imc-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+    .imc-info-card {
+        background: var(--bg-secondary);
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid var(--border-color);
+    }
+    .imc-info-card .numero {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+    .imc-info-card .label {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+    .imc-info-card .classificacao {
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 5px;
+    }
+    .imc-info-card .classificacao.abaixo { color: #ffc107; }
+    .imc-info-card .classificacao.normal { color: #28a745; }
+    .imc-info-card .classificacao.sobrepeso { color: #fd7e14; }
+    .imc-info-card .classificacao.obesidade { color: #dc3545; }
+    
+    .imc-tabela {
+        margin-top: 20px;
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .imc-tabela th, .imc-tabela td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border-color);
+        text-align: center;
+    }
+    .imc-tabela th {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+    .imc-tabela tr:hover { background: var(--bg-card-hover); }
+    
+    .classificacao-tag {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .classificacao-tag.abaixo { background: #ffc107; color: #212529; }
+    .classificacao-tag.normal { background: #28a745; color: white; }
+    .classificacao-tag.sobrepeso { background: #fd7e14; color: white; }
+    .classificacao-tag.obesidade { background: #dc3545; color: white; }
+    
+    .chart-container {
+        background: var(--bg-card);
+        padding: 20px;
+        border-radius: var(--radius);
+        margin: 20px 0;
+        border: 1px solid var(--border-color);
+    }
+    .chart-container canvas { max-height: 300px; max-width: 100%; }
+</style>
+{% endblock %}
+
+{% block header_actions %}
+<a href="/prontuario/{{ paciente.id }}" class="btn btn-primary btn-sm">← Voltar ao Prontuário</a>
+<a href="/resultado/{{ paciente.id }}" class="btn btn-primary btn-sm">← Voltar ao Resultado</a>
+<a href="/" class="btn btn-voltar btn-sm">← Início</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>📊 Evolução do IMC</h2>
+    <p style="color: var(--text-muted);">
+        <strong>{{ paciente.nome }}</strong> • {{ paciente.idade }} anos • 
+        <span id="totalConsultas">{{ total_consultas }} consultas registradas</span>
+    </p>
+</div>
+
+<!-- INFORMAÇÕES RÁPIDAS -->
+<div class="imc-info">
+    <div class="imc-info-card">
+        <div class="numero">{{ imcs[-1] if imcs else '—' }}</div>
+        <div class="label">📊 IMC Atual</div>
+        {% if imcs %}
+            {% set ultimo_imc = imcs[-1] %}
+            {% if ultimo_imc < 18.5 %}
+                <div class="classificacao abaixo">⚠️ Abaixo do peso</div>
+            {% elif ultimo_imc < 25 %}
+                <div class="classificacao normal">✅ Peso normal</div>
+            {% elif ultimo_imc < 30 %}
+                <div class="classificacao sobrepeso">⚠️ Sobrepeso</div>
+            {% else %}
+                <div class="classificacao obesidade">🚨 Obesidade</div>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div class="imc-info-card">
+        <div class="numero">{{ imcs[0] if imcs else '—' }}</div>
+        <div class="label">📊 IMC Inicial</div>
+    </div>
+    <div class="imc-info-card">
+        <div class="numero">
+            {% if imcs|length >= 2 %}
+                {{ "%.1f"|format(imcs[-1] - imcs[0]) }}
+            {% else %}
+                —
+            {% endif %}
+        </div>
+        <div class="label">📈 Variação</div>
+    </div>
+    <div class="imc-info-card">
+        <div class="numero">{{ imcs|length }}</div>
+        <div class="label">📋 Medições</div>
+    </div>
+</div>
+
+<!-- GRÁFICO -->
+<div class="chart-container">
+    <canvas id="imcChart"></canvas>
+</div>
+
+<!-- TABELA -->
+<div class="card">
+    <h3 style="color: var(--text-primary); margin-bottom: 15px;">📋 Histórico de IMC</h3>
+    {% if datas and imcs %}
+        <table class="imc-tabela">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Peso (kg)</th>
+                    <th>IMC (kg/m²)</th>
+                    <th>Classificação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(imcs|length) %}
+                <tr>
+                    <td>{{ datas[i] if i < datas|length else '—' }}</td>
+                    <td>{{ pesos[i] if i < pesos|length else '—' }}</td>
+                    <td><strong>{{ imcs[i] }}</strong></td>
+                    <td>
+                        {% if imcs[i] < 18.5 %}
+                            <span class="classificacao-tag abaixo">Abaixo do peso</span>
+                        {% elif imcs[i] < 25 %}
+                            <span class="classificacao-tag normal">Peso normal</span>
+                        {% elif imcs[i] < 30 %}
+                            <span class="classificacao-tag sobrepeso">Sobrepeso</span>
+                        {% else %}
+                            <span class="classificacao-tag obesidade">Obesidade</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="color: var(--text-muted); text-align: center; padding: 30px;">
+            <span style="font-size: 48px; display: block;">📊</span>
+            Nenhuma medição de IMC registrada.<br>
+            <span style="font-size: 14px;">Cadastre consultas com peso e altura para acompanhar a evolução.</span>
+        </p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // ============================================================
+    // GRÁFICO DE EVOLUÇÃO DO IMC
+    // ============================================================
+    {% if datas and imcs %}
+    (function() {
+        var canvas = document.getElementById('imcChart');
+        if (canvas) {
+            var ctx = canvas.getContext('2d');
+            
+            // Linhas de referência
+            var referenciaAbaixo = {
+                label: 'Abaixo do peso (< 18.5)',
+                data: Array({{ imcs|length }}).fill(18.5),
+                borderColor: '#ffc107',
+                borderDash: [5, 5],
+                borderWidth: 1,
+                pointRadius: 0,
+                fill: false
+            };
+            
+            var referenciaNormal = {
+                label: 'Peso normal (18.5 - 24.9)',
+                data: Array({{ imcs|length }}).fill(25),
+                borderColor: '#28a745',
+                borderDash: [5, 5],
+                borderWidth: 1,
+                pointRadius: 0,
+                fill: false
+            };
+            
+            var referenciaSobrepeso = {
+                label: 'Sobrepeso (25 - 29.9)',
+                data: Array({{ imcs|length }}).fill(30),
+                borderColor: '#fd7e14',
+                borderDash: [5, 5],
+                borderWidth: 1,
+                pointRadius: 0,
+                fill: false
+            };
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: {{ datas|tojson|safe }},
+                    datasets: [
+                        {
+                            label: 'IMC',
+                            data: {{ imcs|tojson|safe }},
+                            backgroundColor: 'rgba(46, 134, 193, 0.2)',
+                            borderColor: 'rgba(46, 134, 193, 1)',
+                            borderWidth: 3,
+                            pointBackgroundColor: 'rgba(46, 134, 193, 1)',
+                            pointRadius: 5,
+                            tension: 0.3,
+                            fill: true
+                        },
+                        referenciaAbaixo,
+                        referenciaNormal,
+                        referenciaSobrepeso
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') || '#333'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.dataset.label === 'IMC') {
+                                        return 'IMC: ' + context.parsed.y + ' kg/m²';
+                                    }
+                                    return context.dataset.label + ': ' + context.parsed.y;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'IMC (kg/m²)',
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') || '#333'
+                            },
+                            ticks: {
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') || '#333'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') || '#333'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    })();
+    {% endif %}
+</script>
+{% endblock %}

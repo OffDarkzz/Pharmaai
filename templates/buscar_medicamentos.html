@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Buscar Medicamentos - PharmaAI{% endblock %}
+
+{% block head %}
+<style>
+    .busca-form { display: flex; gap: 10px; flex-wrap: wrap; }
+    .busca-form input { flex: 1; padding: 12px; border: 2px solid var(--input-border); border-radius: 8px; font-size: 16px; background: var(--input-bg); color: var(--text-secondary); }
+    .busca-form input:focus { border-color: #8e44ad; outline: none; }
+    .busca-form button { background: #8e44ad; color: white; padding: 12px 30px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: all 0.3s; }
+    .busca-form button:hover { background: #6c3483; transform: translateY(-2px); box-shadow: 0 4px 8px var(--shadow-color); }
+    
+    .resultado-item { border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; margin: 15px 0; }
+    .resultado-item h3 { color: var(--text-primary); margin-bottom: 10px; }
+    .info-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+    .info-row .label { font-weight: bold; color: var(--text-primary); }
+    .erro { color: #e74c3c; padding: 20px; text-align: center; }
+    .badge-anvisa { background: #8e44ad; color: white; padding: 2px 10px; border-radius: 12px; font-size: 12px; margin-left: 10px; }
+    .fonte { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+    @media (max-width: 600px) {
+        .busca-form input { width: 100%; margin-bottom: 10px; }
+        .info-row { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block header_actions %}
+<a href="/" class="btn btn-voltar">← Voltar</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>🔍 Buscar Medicamento</h2>
+    <p style="color: var(--text-muted); margin-bottom: 15px;">Consulte dados da base da ANVISA</p>
+    
+    <form method="POST" class="busca-form">
+        <input type="text" name="nome_medicamento" placeholder="Ex: Dipirona, Losartana, Amoxicilina..." required>
+        <button type="submit">Buscar</button>
+    </form>
+</div>
+
+{% if resultado %}
+<div class="card">
+    <h2>📊 Resultado para: <strong>{{ resultado.termo }}</strong></h2>
+    
+    {% if resultado.dados and not resultado.dados.erro %}
+        {% for med in resultado.dados %}
+        <div class="resultado-item">
+            <h3>{{ med.nome }} <span class="badge-anvisa">ANVISA</span></h3>
+            <div class="info-row">
+                <span class="label">💊 Princípio ativo:</span>
+                <span>{{ med.principio_ativo }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">🏭 Empresa:</span>
+                <span>{{ med.empresa or 'Não disponível' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">📝 Registro:</span>
+                <span>{{ med.registro or 'Não disponível' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">📋 Tipo:</span>
+                <span>{{ med.tipo or 'Não disponível' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">📊 Classe Terapêutica:</span>
+                <span>{{ med.classe_terapeutica or 'Não disponível' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">📌 Situação:</span>
+                <span>{{ med.situacao or 'Ativo' }}</span>
+            </div>
+            <div class="fonte">Fonte: ANVISA - Dados oficiais</div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="erro">❌ {{ resultado.dados.erro if resultado.dados else 'Medicamento não encontrado' }}</div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

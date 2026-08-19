@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - PharmaAI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: linear-gradient(135deg, #1a5276, #2e86c1); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .container { max-width: 420px; width: 100%; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .container h1 { text-align: center; color: #1a5276; font-size: 28px; margin-bottom: 5px; }
+        .container .subtitle { text-align: center; color: #888; font-size: 14px; margin-bottom: 30px; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #1a5276; }
+        input { width: 100%; padding: 12px; margin-top: 5px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; transition: border 0.3s; }
+        input:focus { border-color: #2e86c1; outline: none; }
+        .btn-cadastro { background: #28b463; color: white; padding: 14px; border: none; border-radius: 8px; font-size: 18px; margin-top: 25px; cursor: pointer; width: 100%; transition: all 0.3s; font-weight: bold; }
+        .btn-cadastro:hover { background: #1e8449; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .btn-login { background: transparent; color: #2e86c1; padding: 14px; border: 2px solid #2e86c1; border-radius: 8px; font-size: 16px; margin-top: 10px; cursor: pointer; width: 100%; transition: all 0.3s; font-weight: bold; text-align: center; text-decoration: none; display: block; }
+        .btn-login:hover { background: #2e86c1; color: white; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .flash-messages { margin-bottom: 20px; }
+        .flash { padding: 12px; border-radius: 8px; margin-bottom: 10px; font-weight: bold; }
+        .flash-success { background: #d5f5e3; color: #1a7a3a; border-left: 4px solid #28b463; }
+        .flash-danger { background: #fdedec; color: #922b21; border-left: 4px solid #e74c3c; }
+        .flash-warning { background: #fef9e7; color: #8a6d00; border-left: 4px solid #f39c12; }
+        .flash-info { background: #eaf2f8; color: #1a5276; border-left: 4px solid #2e86c1; }
+        .logo { text-align: center; font-size: 48px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🏥</div>
+        <h1>Criar Conta</h1>
+        <p class="subtitle">Cadastre-se para começar a usar o PharmaAI</p>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST">
+            <label>Nome completo</label>
+            <input type="text" name="nome" placeholder="Seu nome" required>
+            
+            <label>Email</label>
+            <input type="email" name="email" placeholder="seu@email.com" required>
+            
+            <label>Senha</label>
+            <input type="password" name="senha" placeholder="•••••••• (mínimo 6 caracteres)" required>
+            
+            <label>Confirmar senha</label>
+            <input type="password" name="confirmar_senha" placeholder="••••••••" required>
+            
+            <button type="submit" class="btn-cadastro">📝 Cadastrar</button>
+        </form>
+        
+        <a href="/login" class="btn-login">🔑 Já tenho conta</a>
+    </div>
+</body>
+</html>

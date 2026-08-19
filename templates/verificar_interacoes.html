@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+
+{% block title %}Verificar Interações - PharmaAI{% endblock %}
+
+{% block head %}
+<style>
+    .interacao-card {
+        padding: 18px 20px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        border-left: 5px solid;
+        transition: all 0.3s;
+    }
+    .interacao-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 10px var(--shadow-color);
+    }
+    
+    /* Tema Claro */
+    .interacao-grave {
+        background: #f8d7da;
+        border-left-color: #dc3545;
+        color: #721c24;
+    }
+    .interacao-grave .badge-interacao { background: #dc3545; color: white; }
+    .interacao-grave .recomendacao-box { background: rgba(255,255,255,0.6); color: #721c24; }
+    .interacao-grave .fonte-info { color: #721c24; border-top-color: #dc3545; }
+    
+    .interacao-moderada {
+        background: #fff3cd;
+        border-left-color: #ffc107;
+        color: #856404;
+    }
+    .interacao-moderada .badge-interacao { background: #ffc107; color: #212529; }
+    .interacao-moderada .recomendacao-box { background: rgba(255,255,255,0.6); color: #856404; }
+    .interacao-moderada .fonte-info { color: #856404; border-top-color: #ffc107; }
+    
+    .interacao-leve {
+        background: #d1ecf1;
+        border-left-color: #17a2b8;
+        color: #0c5460;
+    }
+    .interacao-leve .badge-interacao { background: #17a2b8; color: white; }
+    .interacao-leve .recomendacao-box { background: rgba(255,255,255,0.6); color: #0c5460; }
+    .interacao-leve .fonte-info { color: #0c5460; border-top-color: #17a2b8; }
+    
+    .interacao-none {
+        background: #d4edda;
+        border-left-color: #28a745;
+        padding: 30px;
+        text-align: center;
+        border-radius: 10px;
+        color: #155724;
+    }
+    
+    /* Tema Escuro */
+    body.dark-theme .interacao-grave {
+        background: #3d1a1a;
+        border-left-color: #e74c3c;
+        color: #f8d7da;
+    }
+    body.dark-theme .interacao-grave .badge-interacao { background: #e74c3c; color: white; }
+    body.dark-theme .interacao-grave .recomendacao-box { background: rgba(255,255,255,0.1); color: #f8d7da; }
+    body.dark-theme .interacao-grave .fonte-info { color: #f8d7da; border-top-color: #e74c3c; }
+    
+    body.dark-theme .interacao-moderada {
+        background: #3d2e1a;
+        border-left-color: #f1c40f;
+        color: #fef9e7;
+    }
+    body.dark-theme .interacao-moderada .badge-interacao { background: #f1c40f; color: #212529; }
+    body.dark-theme .interacao-moderada .recomendacao-box { background: rgba(255,255,255,0.1); color: #fef9e7; }
+    body.dark-theme .interacao-moderada .fonte-info { color: #fef9e7; border-top-color: #f1c40f; }
+    
+    body.dark-theme .interacao-leve {
+        background: #1a2a3a;
+        border-left-color: #3498db;
+        color: #d1ecf1;
+    }
+    body.dark-theme .interacao-leve .badge-interacao { background: #3498db; color: white; }
+    body.dark-theme .interacao-leve .recomendacao-box { background: rgba(255,255,255,0.1); color: #d1ecf1; }
+    body.dark-theme .interacao-leve .fonte-info { color: #d1ecf1; border-top-color: #3498db; }
+    
+    body.dark-theme .interacao-none {
+        background: #1a3a1a;
+        color: #d4edda;
+        border-left-color: #2ecc71;
+    }
+    
+    body.dark-theme .alert-grave {
+        background: #3d1a1a !important;
+        color: #f8d7da !important;
+        border-left-color: #e74c3c !important;
+    }
+    
+    .badge-interacao {
+        display: inline-block;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    
+    .med-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 10px 0;
+    }
+    .med-tag {
+        background: var(--bg-secondary);
+        padding: 5px 14px;
+        border-radius: 20px;
+        border: 1px solid var(--border-color);
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    .fonte-info {
+        font-size: 12px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed;
+    }
+    .fonte-info i { margin-right: 5px; }
+    
+    .recomendacao-box {
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin-top: 8px;
+        font-size: 14px;
+    }
+    
+    .dica-box {
+        background: var(--bg-secondary);
+        padding: 15px 20px;
+        border-radius: 8px;
+        border-left: 4px solid #2e86c1;
+        margin-top: 15px;
+    }
+    .dica-box strong { color: var(--text-primary); }
+    .dica-box li { color: var(--text-muted); }
+    
+    .resultado-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+    
+    .alert-grave {
+        background: #f8d7da;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid #dc3545;
+        color: #721c24;
+    }
+    
+    .loading {
+        display: none;
+        text-align: center;
+        padding: 30px;
+    }
+    .loading .spinner {
+        border: 4px solid var(--border-color);
+        border-top: 4px solid #2e86c1;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .badge-fonte {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .badge-pharmadb { background: #6c3483; color: white; }
+    .badge-local { background: #2e86c1; color: white; }
+    .badge-anvisa { background: #1a5276; color: white; }
+    
+    @media (max-width: 600px) {
+        .interacao-card { padding: 15px; }
+        .resultado-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>🔗 Verificar Interações Medicamentosas</h2>
+    <p style="color: var(--text-muted); margin-bottom: 20px;">
+        Digite os medicamentos separados por vírgula para verificar possíveis interações.
+        <br>
+        <small>Exemplo: Varfarina, Ibuprofeno, Losartana, Metformina, Amoxicilina</small>
+    </p>
+    
+    <form method="POST" id="formInteracoes" onsubmit="mostrarLoading()">
+        <div class="form-group">
+            <label class="form-label">💊 Medicamentos</label>
+            <input type="text" name="medicamentos" class="form-control" 
+                   placeholder="Ex: Varfarina, Ibuprofeno, Losartana" 
+                   value="{{ request.form.get('medicamentos', '') }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btnVerificar">
+            <i class="fas fa-search"></i> Verificar Interações
+        </button>
+    </form>
+    
+    <div class="loading" id="loadingDiv">
+        <div class="spinner"></div>
+        <p style="color: var(--text-muted);">🔍 Consultando bases de dados...</p>
+        <p style="color: var(--text-muted); font-size: 13px;">PharmaDB • Base local • ANVISA</p>
+    </div>
+    
+    <div class="dica-box">
+        <strong>💡 Como funciona:</strong>
+        <ul style="margin-top: 5px; padding-left: 20px;">
+            <li>🔍 Busca interações em <strong>múltiplas fontes</strong></li>
+            <li>💊 <strong>PharmaDB</strong> - base de dados farmacológica (se configurada)</li>
+            <li>📋 <strong>Base local</strong> - interações conhecidas (fallback)</li>
+            <li>🌐 <strong>ANVISA</strong> - dados oficiais de medicamentos</li>
+            <li>📊 Classifica interações como: <strong>Grave, Moderada ou Leve</strong></li>
+        </ul>
+    </div>
+</div>
+
+{% if resultado is not none %}
+<div class="card">
+    <div class="resultado-header">
+        <h3 style="color: var(--text-primary); margin: 0;">
+            📋 Resultado da Verificação
+        </h3>
+        <span class="badge" style="background: #2e86c1; color: white; font-size: 14px; padding: 6px 16px;">
+            {{ resultado|length }} interações encontradas
+        </span>
+    </div>
+    
+    {% if resultado|length > 0 %}
+        {% set tem_grave = resultado|selectattr('nivel', 'equalto', 'Grave')|list|length > 0 %}
+        {% if tem_grave %}
+            <div class="alert-grave">
+                <strong style="font-size: 16px;">🚨 ATENÇÃO:</strong> Foram encontradas interações <strong>GRAVES</strong>. 
+                Revise a prescrição com cuidado e considere alternativas.
+            </div>
+        {% endif %}
+        
+        {% for inter in resultado %}
+            <div class="interacao-card 
+                {% if inter.nivel == 'Grave' %}interacao-grave
+                {% elif inter.nivel == 'Moderada' %}interacao-moderada
+                {% else %}interacao-leve{% endif %}">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <div>
+                        <strong style="font-size: 17px;">
+                            {{ inter.medicamento1 }}
+                        </strong>
+                        <span style="margin: 0 5px;">+</span>
+                        <strong style="font-size: 17px;">
+                            {{ inter.medicamento2 }}
+                        </strong>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span class="badge-interacao 
+                            {% if inter.nivel == 'Grave' %}badge-grave
+                            {% elif inter.nivel == 'Moderada' %}badge-moderada
+                            {% else %}badge-leve{% endif %}">
+                            {% if inter.nivel == 'Grave' %}🔴 Grave
+                            {% elif inter.nivel == 'Moderada' %}🟡 Moderada
+                            {% else %}🟢 Leve{% endif %}
+                        </span>
+                        {% if inter.fonte %}
+                            <span class="badge-fonte 
+                                {% if inter.fonte == 'PharmaDB' %}badge-pharmadb
+                                {% elif inter.fonte == 'Base local' %}badge-local
+                                {% else %}badge-anvisa{% endif %}">
+                                {{ inter.fonte }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <p style="margin-top: 12px; margin-bottom: 5px;">
+                    {{ inter.descricao }}
+                </p>
+                
+                <div class="recomendacao-box">
+                    <strong>💡 Recomendação:</strong> {{ inter.recomendacao }}
+                </div>
+                
+                <div class="fonte-info">
+                    <i class="fas fa-database"></i> 
+                    Fonte: {% if inter.fonte %}{{ inter.fonte }}{% else %}Múltiplas fontes{% endif %}
+                    <span style="float: right;">
+                        <i class="fas fa-clock"></i> {{ inter.data|default('Atualizado') }}
+                    </span>
+                </div>
+            </div>
+        {% endfor %}
+        
+    {% else %}
+        <div class="interacao-none">
+            <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+            <strong style="font-size: 18px;">Nenhuma interação detectada</strong>
+            <p style="margin-top: 5px;">
+                Os medicamentos informados não apresentam interações conhecidas nas bases consultadas.
+            </p>
+        </div>
+    {% endif %}
+    
+    <!-- Lista de medicamentos pesquisados -->
+    {% if request.form.get('medicamentos') %}
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">
+                <strong>📋 Medicamentos pesquisados:</strong>
+            </p>
+            <div class="med-list">
+                {% for med in request.form.get('medicamentos', '').split(',') %}
+                    {% if med.strip() %}
+                        <span class="med-tag">{{ med.strip() }}</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+    <a href="/" class="btn btn-voltar">← Voltar ao início</a>
+    <a href="/verificar_interacoes" class="btn btn-primary">🔄 Nova Consulta</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function mostrarLoading() {
+        document.getElementById('loadingDiv').style.display = 'block';
+        document.getElementById('btnVerificar').disabled = true;
+        document.getElementById('btnVerificar').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Histórico - PharmaAI{% endblock %}
+
+{% block head %}
+<style>
+    .consulta-item { border-bottom: 1px solid var(--border-color); padding: 20px 0; }
+    .consulta-item:last-child { border-bottom: none; }
+    .data { color: var(--text-muted); font-size: 14px; }
+    .badge-status { padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+    .badge-pendente { background: #fef9e7; color: #8a6d00; }
+    .badge-analisado { background: #d5f5e3; color: #1a7a3a; }
+    .badge-aprovado { background: #d5f5e3; color: #1a7a3a; border: 2px solid #28b463; }
+    .prescricao-box { background: var(--bg-secondary); padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #2e86c1; }
+    .prescricao-aprovada-box { background: #d5f5e3; border-left: 4px solid #28b463; }
+</style>
+{% endblock %}
+
+{% block header_actions %}
+<a href="/resultado/{{ paciente.id }}" class="btn btn-voltar">← Voltar à análise</a>
+<a href="/" class="btn btn-voltar">← Início</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>📜 Histórico de {{ paciente.nome }}</h2>
+    <p style="color: var(--text-muted);">{{ paciente.idade }} anos - {{ paciente.doencas or 'Sem doenças' }}</p>
+</div>
+
+<div class="card">
+    <h2>Consultas</h2>
+    {% if consultas %}
+        {% for c in consultas %}
+        <div class="consulta-item">
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                <div class="data">📅 {{ c.data.strftime('%d/%m/%Y %H:%M') }}</div>
+                <div>
+                    {% if c.status == 'Pendente' %}
+                        <span class="badge-status badge-pendente">⏳ Pendente</span>
+                    {% elif c.status == 'Analisado' %}
+                        <span class="badge-status badge-analisado">📝 Analisado</span>
+                    {% elif c.status == 'Aprovado' %}
+                        <span class="badge-status badge-aprovado">✅ Aprovado</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <p><strong>Queixa:</strong> {{ c.queixa }}</p>
+            <p><strong>Diagnóstico:</strong> {{ c.diagnostico or 'Não informado' }}</p>
+            
+            {% if c.medicamentos_receitados %}
+                <div class="prescricao-box prescricao-aprovada-box">
+                    <strong>💊 Prescrição:</strong>
+                    <p style="white-space: pre-wrap; color: var(--text-secondary);">{{ c.medicamentos_receitados }}</p>
+                </div>
+            {% endif %}
+            
+            {% if c.parecer_farmaceutico %}
+                <p><strong>📝 Parecer:</strong> {{ c.parecer_farmaceutico }}</p>
+            {% endif %}
+            
+            <p><strong>Obs:</strong> {{ c.observacoes or 'Nenhuma' }}</p>
+            
+            <div style="margin-top: 10px;">
+                <a href="/resultado/{{ paciente.id }}" class="btn" style="padding: 5px 15px; font-size: 14px; background: var(--btn-primary); color: white; text-decoration: none; border-radius: 5px;">🔍 Ver Análise</a>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color: var(--text-muted);">Nenhuma consulta registrada.</p>
+    {% endif %}
+</div>
+{% endblock %}

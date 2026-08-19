@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Cálculo de Dose - {{ paciente.nome }}{% endblock %}
+
+{% block head %}
+<style>
+    .dose-card {
+        background: var(--bg-card);
+        padding: 20px;
+        border-radius: var(--radius);
+        margin-bottom: 15px;
+        border-left: 4px solid #2e86c1;
+        border: 1px solid var(--border-color);
+    }
+    .dose-card .med-nome {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .dose-card .dose-calculada {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--success);
+    }
+    .dose-card .dose-info {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin-top: 8px;
+    }
+    .dose-card .dose-info p { margin: 4px 0; }
+    .dose-card .alerta-idoso {
+        background: var(--warning-bg);
+        padding: 10px;
+        border-radius: 8px;
+        border-left: 4px solid var(--warning);
+        margin-top: 10px;
+        color: var(--warning-text);
+    }
+    .dose-card .erro {
+        color: var(--danger);
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block header_actions %}
+<a href="/resultado/{{ paciente.id }}" class="btn btn-primary btn-sm">← Voltar</a>
+<a href="/" class="btn btn-voltar btn-sm">← Início</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>💊 Cálculo de Dose por Peso</h2>
+    <p style="color: var(--text-muted);">
+        Paciente: <strong>{{ paciente.nome }}</strong> | 
+        Peso: <strong>{{ paciente.peso or 'Não informado' }} kg</strong> | 
+        Idade: <strong>{{ paciente.idade }} anos</strong>
+    </p>
+    
+    {% if not paciente.peso %}
+        <div class="alerta alerta-warning" style="background: var(--warning-bg); padding: 15px; border-radius: 8px; border-left: 4px solid var(--warning); color: var(--warning-text); margin-top: 10px;">
+            ⚠️ Peso não informado. Cadastre o peso do paciente para cálculo preciso.
+        </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3 style="color: var(--text-primary); margin-bottom: 15px;">📋 Doses Calculadas</h3>
+    
+    {% if resultados %}
+        {% for r in resultados %}
+        <div class="dose-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <span class="med-nome">{{ r.medicamento }}</span>
+                <span class="dose-calculada">{{ r.dose_calculada }}</span>
+            </div>
+            
+            <div class="dose-info">
+                <p><strong>Dose padrão:</strong> {{ r.dose_padrao }}</p>
+                <p><strong>Dose por peso:</strong> {{ r.dose_peso }}</p>
+                <p><strong>Dose máxima diária:</strong> {{ r.dose_maxima_diaria }}</p>
+                <p><strong>Intervalo:</strong> {{ r.intervalo }}</p>
+                <p><strong>Observação:</strong> {{ r.observacao }}</p>
+            </div>
+            
+            <!-- CORREÇÃO: usar paciente.idade em vez de r.idade -->
+            {% if paciente.idade > 65 and 'idoso' in r.dose_calculada %}
+                <div class="alerta-idoso">
+                    👴 Paciente idoso - Dose ajustada para 70% da dose padrão
+                </div>
+            {% endif %}
+            
+            {% if r.erro %}
+                <div class="erro" style="margin-top: 10px;">
+                    ⚠️ {{ r.erro }}
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color: var(--text-muted); text-align: center; padding: 30px;">
+            Nenhum medicamento para calcular dose.
+        </p>
+    {% endif %}
+</div>
+
+<div class="btn-acoes" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+    <a href="/resultado/{{ paciente.id }}" class="btn btn-primary">← Voltar</a>
+    <a href="/prontuario/{{ paciente.id }}" class="btn btn-purple">📋 Prontuário</a>
+</div>
+{% endblock %}
