@@ -28,7 +28,11 @@ st.set_page_config(page_title="PharmAI", layout="wide")
 @st.cache_data
 def carregar_dados():
     # Aqui vai o seu código que lê o CSV
-    df = pd.read_csv('cid10.csv') # ou o nome do seu arquivo
+    @st.cache_data
+def carregar_csv():
+    return pd.read_csv('cid10.csv')
+
+df = carregar_csv()
     return df
 
 # Agora chame a função. O Streamlit vai carregar UMA VEZ e guardar na memória.
