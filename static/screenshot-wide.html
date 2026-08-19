@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Screenshot Wide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f4f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 1280px;
+            height: 720px;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .card .logo { font-size: 48px; }
+        .card h1 { color: #1a5276; font-size: 28px; }
+        .card p { color: #666; margin: 10px 0 20px; }
+        .card .btn {
+            background: #2e86c1;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .card .info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .card .info-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .card .info-item .num { font-size: 24px; font-weight: bold; color: #1a5276; }
+        .card .info-item .label { font-size: 13px; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">🏥</div>
+        <h1>PharmaAI</h1>
+        <p>Sistema de apoio à decisão clínica</p>
+        <div class="info">
+            <div class="info-item">
+                <div class="num">12</div>
+                <div class="label">👤 Pacientes</div>
+            </div>
+            <div class="info-item">
+                <div class="num">8</div>
+                <div class="label">📋 Consultas</div>
+            </div>
+            <div class="info-item">
+                <div class="num">5</div>
+                <div class="label">💊 Medicamentos</div>
+            </div>
+        </div>
+        <button class="btn">➕ Nova Anamnese</button>
+    </div>
+</body>
+</html>
