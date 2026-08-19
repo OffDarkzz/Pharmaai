@@ -20,27 +20,21 @@ from reportlab.lib import colors
 from reportlab.lib.units import cm
 import streamlit as st
 import pandas as pd
+# (coloque aqui os outros imports que você tem, ex: google.generativeai)
 
-# --- COLOQUE ISSO LOGO NO COMEÇO DO CÓDIGO ---
-st.set_page_config(page_title="PharmAI", layout="wide")
-
-# Crie uma função para carregar os dados e coloque o @st.cache_data nela
+# CORREÇÃO DA TELA PRETA
 @st.cache_data
-def carregar_dados():
-    # Aqui vai o seu código que lê o CSV
-    @st.cache_data
 def carregar_csv():
+    # Coloque o nome EXATO do seu arquivo abaixo. Se for "cid10.csv", deixe assim.
     return pd.read_csv('cid10.csv')
 
+# Carrega os dados de uma vez
 df = carregar_csv()
-    return df
 
-# Agora chame a função. O Streamlit vai carregar UMA VEZ e guardar na memória.
-df = carregar_dados()
-
-# Depois disso, você pode escrever na tela
-st.title("Sistema PharmAI")
-st.write(f"Carregados {len(df)} registros da CID-10")
+# Agora sim, o resto do seu código continua abaixo:
+st.title("Meu App PharmAI")
+st.write(f"Registros carregados: {len(df)}")
+# ... resto do código ...
 # ============================================
 # INICIALIZAÇÃO DO APP
 # ============================================
